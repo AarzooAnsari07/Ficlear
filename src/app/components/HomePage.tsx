@@ -161,9 +161,9 @@ export function HomePage({ onNavigate }: HomePageProps) {
               <div className="w-16 h-16 bg-green-100 rounded-2xl flex items-center justify-center mb-6">
                 <MapPin className="w-8 h-8 text-green-600" />
               </div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-3">PIN Code Checker</h3>
+              <h3 className="text-2xl font-bold text-gray-900 mb-3">Pan India PIN Code Checker</h3>
               <p className="text-gray-600 mb-6 leading-relaxed">
-                Check loan serviceability and bank availability in your area
+                Search 150,000+ PIN codes across India • Live data from data.gov.in
               </p>
               <Button 
                 className="w-full bg-green-600 hover:bg-green-700 font-semibold"

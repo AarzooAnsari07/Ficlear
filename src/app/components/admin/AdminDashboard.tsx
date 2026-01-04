@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent } from '../ui/card';
 import { Button } from '../ui/button';
 import { 
@@ -20,19 +20,58 @@ import { OffersManagement } from './OffersManagement';
 import { PolicyManagement } from './PolicyManagement';
 import { AdminSettings } from './AdminSettings';
 import { BanksManagement } from './BanksManagement';
+import { DatabaseSettings } from './DatabaseSettings';
+import { companiesAPI, pincodesAPI, banksAPI, offersAPI } from '../../utils/database';
 
 interface AdminDashboardProps {
   onLogout: () => void;
 }
 
 export function AdminDashboard({ onLogout }: AdminDashboardProps) {
-  const [activeTab, setActiveTab] = useState<'overview' | 'companies' | 'pincodes' | 'banks' | 'offers' | 'policy' | 'settings'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'companies' | 'pincodes' | 'banks' | 'offers' | 'policy' | 'database' | 'settings'>('overview');
+  const [stats, setStats] = useState({
+    companies: 0,
+    pincodes: 0,
+    offers: 0,
+    banks: 0,
+  });
+  const [isLoading, setIsLoading] = useState(true);
 
-  const stats = [
-    { label: 'Total Companies', value: '24', icon: Building2, color: 'text-blue-600', bg: 'bg-blue-50' },
-    { label: 'Total PIN Codes', value: '150+', icon: MapPin, color: 'text-green-600', bg: 'bg-green-50' },
-    { label: 'Active Offers', value: '8', icon: Tag, color: 'text-orange-600', bg: 'bg-orange-50' },
-    { label: 'Total Banks', value: '8', icon: TrendingUp, color: 'text-purple-600', bg: 'bg-purple-50' },
+  // Fetch real-time stats from database
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        setIsLoading(true);
+        
+        // Fetch all data in parallel
+        const [companiesData, pincodesData, offersData, banksData] = await Promise.all([
+          companiesAPI.getAll(),
+          pincodesAPI.getAll(),
+          offersAPI.getAll(),
+          banksAPI.getAll(),
+        ]);
+
+        setStats({
+          companies: companiesData.data?.length || 0,
+          pincodes: pincodesData.data?.length || 0,
+          offers: offersData.data?.length || 0,
+          banks: banksData.data?.length || 0,
+        });
+      } catch (error) {
+        console.error('Error fetching dashboard stats:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchStats();
+  }, []);
+
+  const statsConfig = [
+    { label: 'Total Companies', value: stats.companies.toString(), icon: Building2, color: 'text-blue-600', bg: 'bg-blue-50' },
+    { label: 'Total PIN Codes', value: stats.pincodes >= 150 ? '150+' : stats.pincodes.toString(), icon: MapPin, color: 'text-green-600', bg: 'bg-green-50' },
+    { label: 'Active Offers', value: stats.offers.toString(), icon: Tag, color: 'text-orange-600', bg: 'bg-orange-50' },
+    { label: 'Total Banks', value: stats.banks.toString(), icon: TrendingUp, color: 'text-purple-600', bg: 'bg-purple-50' },
   ];
 
   return (
@@ -125,6 +164,18 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
           </button>
 
           <button
+            onClick={() => setActiveTab('database')}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
+              activeTab === 'database'
+                ? 'bg-blue-50 text-blue-600'
+                : 'text-gray-700 hover:bg-gray-50'
+            }`}
+          >
+            <Database className="w-5 h-5" />
+            <span className="font-medium">Database Settings</span>
+          </button>
+
+          <button
             onClick={() => setActiveTab('settings')}
             className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
               activeTab === 'settings'
@@ -161,6 +212,7 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
               {activeTab === 'banks' && 'Banks Management'}
               {activeTab === 'offers' && 'Live Offers Management'}
               {activeTab === 'policy' && 'Policy Details Management'}
+              {activeTab === 'database' && 'Database Settings'}
               {activeTab === 'settings' && 'Settings'}
             </h2>
             <p className="text-gray-600">
@@ -170,6 +222,7 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
               {activeTab === 'banks' && 'Add, edit, and manage bank listings'}
               {activeTab === 'offers' && 'Update bank offers and promotions'}
               {activeTab === 'policy' && 'Manage policy documents and details'}
+              {activeTab === 'database' && 'Configure database settings'}
               {activeTab === 'settings' && 'Configure platform settings'}
             </p>
           </div>
@@ -179,7 +232,7 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
             <>
               {/* Stats Grid */}
               <div className="grid grid-cols-4 gap-6 mb-8">
-                {stats.map((stat) => (
+                {statsConfig.map((stat) => (
                   <Card key={stat.label}>
                     <CardContent className="p-6">
                       <div className="flex items-center justify-between">
@@ -271,6 +324,7 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
           {activeTab === 'banks' && <BanksManagement />}
           {activeTab === 'offers' && <OffersManagement />}
           {activeTab === 'policy' && <PolicyManagement />}
+          {activeTab === 'database' && <DatabaseSettings />}
           {activeTab === 'settings' && <AdminSettings />}
         </div>
       </div>

@@ -1,10 +1,13 @@
 import { Building2, Mail, Phone, MapPin } from 'lucide-react';
+import { useSettings } from '../contexts/SettingsContext';
 
 interface FooterProps {
   onNavigate?: (page: string) => void;
 }
 
 export function Footer({ onNavigate }: FooterProps) {
+  const { settings } = useSettings();
+  
   const handleNavigation = (page: string) => {
     if (onNavigate) {
       onNavigate(page);
@@ -21,7 +24,7 @@ export function Footer({ onNavigate }: FooterProps) {
           <div className="lg:col-span-2">
             <div className="flex items-center gap-2 mb-4">
               <Building2 className="w-8 h-8 text-blue-500" />
-              <span className="text-2xl font-bold text-white">FiClear</span>
+              <span className="text-2xl font-bold text-white">{settings.platformName}</span>
             </div>
             <p className="text-gray-400 mb-4 max-w-md">
               Your trusted partner for loan eligibility checking and financial consultancy. 
@@ -30,18 +33,18 @@ export function Footer({ onNavigate }: FooterProps) {
             <div className="space-y-2 text-sm">
               <div className="flex items-center gap-2 text-gray-400">
                 <MapPin className="w-4 h-4 text-blue-500" />
-                <span>India</span>
+                <span>{settings.address}</span>
               </div>
               <div className="flex items-center gap-2 text-gray-400">
                 <Mail className="w-4 h-4 text-blue-500" />
-                <a href="mailto:support@ficlear.in" className="hover:text-blue-400 transition-colors">
-                  support@ficlear.in
+                <a href={`mailto:${settings.supportEmail}`} className="hover:text-blue-400 transition-colors">
+                  {settings.supportEmail}
                 </a>
               </div>
               <div className="flex items-center gap-2 text-gray-400">
                 <Phone className="w-4 h-4 text-blue-500" />
-                <a href="tel:+911234567890" className="hover:text-blue-400 transition-colors">
-                  +91 123 456 7890
+                <a href={`tel:${settings.supportPhone.replace(/\s/g, '')}`} className="hover:text-blue-400 transition-colors">
+                  {settings.supportPhone}
                 </a>
               </div>
             </div>
@@ -138,7 +141,7 @@ export function Footer({ onNavigate }: FooterProps) {
         <div className="border-t border-gray-800 pt-6">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-gray-500">
             <p>
-              © {new Date().getFullYear()} FiClear. All rights reserved.
+              {settings.footerText}
             </p>
             <a
               href="https://www.ficlear.in"

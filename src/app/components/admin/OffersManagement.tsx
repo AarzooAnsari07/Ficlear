@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent } from '../ui/card';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Badge } from '../ui/badge';
-import { Plus, Search, Edit, Trash2, Tag, X, Calendar, TrendingUp } from 'lucide-react';
+import { Plus, Search, Edit, Trash2, Tag, X, Calendar, TrendingUp, Loader2, AlertCircle, CheckCircle } from 'lucide-react';
+import { offersAPI } from '../../utils/database';
 
 interface LiveOffer {
   id: string;
@@ -28,74 +29,137 @@ export function OffersManagement() {
   const [searchQuery, setSearchQuery] = useState('');
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingOffer, setEditingOffer] = useState<string | null>(null);
-  const [offers, setOffers] = useState<LiveOffer[]>([
-    {
-      id: '1',
-      bankName: 'HDFC Bank',
-      bankLogo: '🏦',
-      loanType: 'Personal Loan',
-      offerBadge: 'Festival Offer',
-      badgeColor: 'orange',
-      interestRate: '10.50%',
-      interestRateNote: 'p.a. onwards',
-      maxAmount: '₹40 Lakhs',
-      maxAmountTenure: 'Up to 5 years',
-      processingFee: '0.99%',
-      processingFeeNote: '+ GST',
-      keyBenefits: [
-        'Instant approval in 10 minutes',
-        'Minimal documentation',
-        'No collateral required',
-      ],
-      eligibilityCriteria: 'Salaried, Min ₹25,000/month',
-      validTill: 'Dec 31, 2025',
-      isTrending: true,
-    },
-    {
-      id: '2',
-      bankName: 'Axis Bank',
-      bankLogo: '💼',
-      loanType: 'Business Loan',
-      offerBadge: 'Hot Deal',
-      badgeColor: 'green',
-      interestRate: '12.00%',
-      interestRateNote: 'p.a. onwards',
-      maxAmount: '₹75 Lakhs',
-      maxAmountTenure: 'Up to 7 years',
-      processingFee: '1.5%',
-      processingFeeNote: '+ GST',
-      keyBenefits: [
-        'Quick disbursal in 48 hours',
-        'Working capital support',
-        'Overdraft facility',
-      ],
-      eligibilityCriteria: 'Business vintage 3+ years, ITR ₹5L+',
-      validTill: 'Jan 31, 2026',
-      isTrending: true,
-    },
-    {
-      id: '3',
-      bankName: 'SBI',
-      bankLogo: '🏛️',
-      loanType: 'Education Loan',
-      offerBadge: 'New Launch',
-      badgeColor: 'blue',
-      interestRate: '9.15%',
-      interestRateNote: 'p.a. onwards',
-      maxAmount: '₹1.5 Crores',
-      maxAmountTenure: 'Up to 15 years',
-      processingFee: 'FREE',
-      processingFeeNote: '+ GST',
-      keyBenefits: [
-        'Interest subsidy for eligible students',
-        'No collateral up to ₹7.5L',
-        'Moratorium period available',
-      ],
-      eligibilityCriteria: 'Admission to recognized institution',
-      validTill: 'Mar 31, 2026',
-      isTrending: false,
-    },
-  ]);
+  const [offers, setOffers] = useState<LiveOffer[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
+
+  // Load offers from database
+  useEffect(() => {
+    loadOffers();
+  }, []);
+
+  const loadOffers = async () => {
+    try {
+      setIsLoading(true);
+      const response = await offersAPI.getAll();
+      
+      if (response.success && response.data) {
+        // Filter out null/undefined values
+        const validOffers = response.data.filter((offer): offer is LiveOffer => 
+          offer !== null && 
+          offer !== undefined && 
+          typeof offer === 'object' &&
+          'bankName' in offer
+        );
+        setOffers(validOffers);
+        
+        // If no offers exist, seed demo data
+        if (validOffers.length === 0) {
+          await seedDemoOffers();
+        }
+      } else {
+        setOffers([]);
+      }
+    } catch (error) {
+      console.error('Error loading offers:', error);
+      setMessage({ type: 'error', text: 'Failed to load offers' });
+      setOffers([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const seedDemoOffers = async () => {
+    const demoOffers: Omit<LiveOffer, 'id'>[] = [
+      {
+        bankName: 'Bajaj Finance',
+        bankLogo: '💰',
+        loanType: 'Personal Loan',
+        offerBadge: 'Hot Deal',
+        badgeColor: 'green',
+        interestRate: '11.00%',
+        interestRateNote: 'p.a. onwards',
+        maxAmount: '₹35 Lakhs',
+        maxAmountTenure: 'Up to 7 years',
+        processingFee: '2.00%',
+        processingFeeNote: '+ GST',
+        keyBenefits: [
+          'Instant approval in 5 minutes',
+          'Flexible repayment options',
+          'No prepayment charges',
+          'Digital process - Paperless loan'
+        ],
+        eligibilityCriteria: 'Salaried, Min ₹20,000/month',
+        validTill: 'Mar 31, 2026',
+        isTrending: true,
+      },
+      {
+        bankName: 'HDFC Bank',
+        bankLogo: '🏦',
+        loanType: 'Personal Loan',
+        offerBadge: 'Festival Offer',
+        badgeColor: 'orange',
+        interestRate: '10.50%',
+        interestRateNote: 'p.a. onwards',
+        maxAmount: '₹40 Lakhs',
+        maxAmountTenure: 'Up to 5 years',
+        processingFee: '0.99%',
+        processingFeeNote: '+ GST',
+        keyBenefits: [
+          'Instant approval in 10 minutes',
+          'Minimal documentation required',
+          'No collateral required',
+          'Flexible EMI options'
+        ],
+        eligibilityCriteria: 'Salaried, Min ₹25,000/month',
+        validTill: 'Dec 31, 2025',
+        isTrending: true,
+      },
+      {
+        bankName: 'ICICI Bank',
+        bankLogo: '🏛️',
+        loanType: 'Home Loan',
+        offerBadge: 'New Launch',
+        badgeColor: 'blue',
+        interestRate: '8.40%',
+        interestRateNote: 'p.a. onwards',
+        maxAmount: '₹5 Crores',
+        maxAmountTenure: 'Up to 30 years',
+        processingFee: 'FREE',
+        processingFeeNote: 'Limited period',
+        keyBenefits: [
+          'Zero processing fee',
+          'Pre-approved for existing customers',
+          'Balance transfer facility available',
+          'Top-up loan option'
+        ],
+        eligibilityCriteria: 'Salaried/Self-employed, Min ₹50,000/month',
+        validTill: 'Jan 31, 2026',
+        isTrending: false,
+      },
+    ];
+
+    try {
+      console.log('Seeding demo offers...');
+      const createdOffers = [];
+      
+      for (const offer of demoOffers) {
+        const response = await offersAPI.create(offer as LiveOffer);
+        if (response.success && response.data) {
+          createdOffers.push(response.data);
+        }
+      }
+      
+      if (createdOffers.length > 0) {
+        setOffers(createdOffers);
+        setMessage({ type: 'success', text: `${createdOffers.length} demo offers created successfully!` });
+        console.log('Demo offers seeded successfully');
+      }
+    } catch (error) {
+      console.error('Error seeding demo offers:', error);
+      setMessage({ type: 'error', text: 'Failed to create demo offers' });
+    }
+  };
 
   const [formData, setFormData] = useState<LiveOffer>({
     id: '',
@@ -131,18 +195,47 @@ export function OffersManagement() {
     }
   };
 
-  const handleSaveOffer = () => {
-    if (editingOffer) {
-      setOffers(offers.map((o) => (o.id === editingOffer ? formData : o)));
-    } else {
-      const newOffer = { ...formData, id: Date.now().toString() };
-      setOffers([...offers, newOffer]);
+  const handleSaveOffer = async () => {
+    try {
+      if (editingOffer) {
+        const response = await offersAPI.update(editingOffer, formData);
+        if (response.success) {
+          setOffers(offers.map((o) => (o.id === editingOffer ? formData : o)));
+          setMessage({ type: 'success', text: 'Offer updated successfully' });
+        } else {
+          setMessage({ type: 'error', text: 'Failed to update offer' });
+        }
+      } else {
+        const response = await offersAPI.create(formData);
+        if (response.success && response.data) {
+          const newOffer = { ...formData, id: response.data.id };
+          setOffers([...offers, newOffer]);
+          setMessage({ type: 'success', text: 'Offer added successfully' });
+        } else {
+          setMessage({ type: 'error', text: 'Failed to add offer' });
+        }
+      }
+    } catch (error) {
+      console.error('Error saving offer:', error);
+      setMessage({ type: 'error', text: 'Failed to save offer' });
+    } finally {
+      resetForm();
     }
-    resetForm();
   };
 
-  const handleDeleteOffer = (offerId: string) => {
-    setOffers(offers.filter((o) => o.id !== offerId));
+  const handleDeleteOffer = async (offerId: string) => {
+    try {
+      const response = await offersAPI.delete(offerId);
+      if (response.success) {
+        setOffers(offers.filter((o) => o.id !== offerId));
+        setMessage({ type: 'success', text: 'Offer deleted successfully' });
+      } else {
+        setMessage({ type: 'error', text: 'Failed to delete offer' });
+      }
+    } catch (error) {
+      console.error('Error deleting offer:', error);
+      setMessage({ type: 'error', text: 'Failed to delete offer' });
+    }
   };
 
   const resetForm = () => {
@@ -629,6 +722,32 @@ export function OffersManagement() {
                 Add New Offer
               </Button>
             )}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Loading Indicator */}
+      {isLoading && (
+        <Card>
+          <CardContent className="p-12 text-center">
+            <Loader2 className="w-12 h-12 text-gray-400 mx-auto mb-4 animate-spin" />
+            <h3 className="font-semibold text-gray-900 mb-2">Loading offers...</h3>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Message Display */}
+      {message && (
+        <Card className={`border-${message.type === 'success' ? 'green' : 'red'}-200 bg-${message.type === 'success' ? 'green' : 'red'}-50`}>
+          <CardContent className="p-6">
+            <div className="flex items-center gap-3">
+              {message.type === 'success' ? (
+                <CheckCircle className="w-5 h-5 text-green-600" />
+              ) : (
+                <AlertCircle className="w-5 h-5 text-red-600" />
+              )}
+              <p className="text-sm text-gray-900">{message.text}</p>
+            </div>
           </CardContent>
         </Card>
       )}
