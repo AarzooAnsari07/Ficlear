@@ -12,6 +12,7 @@ import {
   SelectValue,
 } from './ui/select';
 import { offersAPI } from '../utils/database';
+import { projectId } from '../../../utils/supabase/info';
 
 interface BankOffer {
   id: string;
@@ -51,29 +52,46 @@ export function LiveOffersPage({ onNavigate }: LiveOffersPageProps) {
   const loadOffers = async () => {
     try {
       setIsLoading(true);
-      console.log('Loading offers from database...');
+      console.log('🔍 Loading offers from database...');
+      console.log('📡 API URL:', `https://${projectId}.supabase.co/functions/v1/make-server-6159e8d5/offers`);
+      
       const response = await offersAPI.getAll();
-      console.log('Offers API response:', response);
+      console.log('📦 Full API Response:', response);
+      console.log('✅ Success?', response.success);
+      console.log('📊 Data:', response.data);
+      console.log('🔢 Count:', response.count);
       
       if (response.success && response.data) {
+        console.log('📋 Raw data received:', response.data);
+        console.log('📋 Data is array?', Array.isArray(response.data));
+        console.log('📋 Data length:', response.data.length);
+        
         // Filter out null/undefined values and ensure valid data
-        const validOffers = response.data.filter((offer): offer is BankOffer => 
-          offer !== null && 
-          offer !== undefined && 
-          typeof offer === 'object' &&
-          'bankName' in offer
-        );
-        console.log('Valid offers loaded:', validOffers.length, validOffers);
+        const validOffers = response.data.filter((offer): offer is BankOffer => {
+          const isValid = offer !== null && 
+            offer !== undefined && 
+            typeof offer === 'object' &&
+            'bankName' in offer;
+          
+          if (!isValid && offer !== null) {
+            console.warn('❌ Invalid offer found:', offer);
+          }
+          return isValid;
+        });
+        
+        console.log('✅ Valid offers loaded:', validOffers.length);
+        console.log('✅ Offers data:', validOffers);
         setOffers(validOffers);
       } else {
-        console.log('No offers data in response');
+        console.log('⚠️ No offers data in response or success=false');
         setOffers([]);
       }
     } catch (error) {
-      console.error('Error loading offers:', error);
+      console.error('💥 Error loading offers:', error);
       setOffers([]);
     } finally {
       setIsLoading(false);
+      console.log('✅ Loading complete');
     }
   };
 

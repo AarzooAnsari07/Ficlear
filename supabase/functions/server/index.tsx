@@ -269,7 +269,8 @@ app.get("/make-server-6159e8d5/pincode-search-by-area/:area", async (c) => {
 app.get("/make-server-6159e8d5/companies", async (c) => {
   try {
     const results = await kv.getByPrefix("company:");
-    const companies = results.map(r => typeof r.value === 'string' ? JSON.parse(r.value) : r.value);
+    // getByPrefix returns values directly
+    const companies = results.map(r => typeof r === 'string' ? JSON.parse(r) : r);
     return c.json({ success: true, data: companies, count: companies.length });
   } catch (error) {
     console.log("Error fetching companies:", error);
@@ -351,7 +352,8 @@ app.post("/make-server-6159e8d5/companies/bulk-import", async (c) => {
 app.get("/make-server-6159e8d5/pincodes", async (c) => {
   try {
     const results = await kv.getByPrefix("pincode:");
-    const pincodes = results.map(r => typeof r.value === 'string' ? JSON.parse(r.value) : r.value);
+    // getByPrefix returns values directly
+    const pincodes = results.map(r => typeof r === 'string' ? JSON.parse(r) : r);
     return c.json({ success: true, data: pincodes, count: pincodes.length });
   } catch (error) {
     console.log("Error fetching pincodes:", error);
@@ -432,7 +434,8 @@ app.post("/make-server-6159e8d5/pincodes/bulk-import", async (c) => {
 app.get("/make-server-6159e8d5/banks", async (c) => {
   try {
     const results = await kv.getByPrefix("bank:");
-    const banks = results.map(r => typeof r.value === 'string' ? JSON.parse(r.value) : r.value);
+    // getByPrefix returns values directly
+    const banks = results.map(r => typeof r === 'string' ? JSON.parse(r) : r);
     return c.json({ success: true, data: banks, count: banks.length });
   } catch (error) {
     console.log("Error fetching banks:", error);
@@ -513,7 +516,8 @@ app.post("/make-server-6159e8d5/banks/bulk-import", async (c) => {
 app.get("/make-server-6159e8d5/offers", async (c) => {
   try {
     const results = await kv.getByPrefix("offer:");
-    const offers = results.map(r => typeof r.value === 'string' ? JSON.parse(r.value) : r.value);
+    // getByPrefix already returns values directly, no need to access .value
+    const offers = results.map(r => typeof r === 'string' ? JSON.parse(r) : r);
     return c.json({ success: true, data: offers, count: offers.length });
   } catch (error) {
     console.log("Error fetching offers:", error);
@@ -529,7 +533,8 @@ app.get("/make-server-6159e8d5/offers/:id", async (c) => {
     if (!result) {
       return c.json({ success: false, error: "Offer not found" }, 404);
     }
-    const offer = typeof result.value === 'string' ? JSON.parse(result.value) : result.value;
+    // kv.get returns the value directly
+    const offer = typeof result === 'string' ? JSON.parse(result) : result;
     return c.json({ success: true, data: offer });
   } catch (error) {
     console.log("Error fetching offer:", error);
