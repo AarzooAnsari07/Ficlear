@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Button } from './ui/button';
 import { Shield, Menu, X } from 'lucide-react';
-import logoImage from '../../assets/logo.png';
+import logoImage from 'src/assets/logo.png';
 import { useSettings } from '../contexts/SettingsContext';
 
 interface TopNavigationProps {
